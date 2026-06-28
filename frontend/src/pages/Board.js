@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
@@ -22,8 +22,9 @@ const Board = () => {
   const [showActivityTimeline, setShowActivityTimeline] = useState(false);
 
   useEffect(() => {
-    fetchProjectData();
-  }, [projectId]);
+  fetchProjectData();
+}, [fetchProjectData]);
+
 
   useEffect(() => {
     if (socket) {
@@ -68,23 +69,23 @@ const Board = () => {
     }
   }, [socket, projectId]);
 
-  const fetchProjectData = async () => {
-    try {
-      const projectResponse = await projectService.getProjectById(projectId);
-      setProject(projectResponse.data.project);
+ const fetchProjectData = useCallback(async () => {
+  try {
+    const projectResponse = await projectService.getProjectById(projectId);
+    setProject(projectResponse.data.project);
 
-      const tasksResponse = await taskService.getTasks(projectId);
-      setTasks(tasksResponse.data.tasks);
+    const tasksResponse = await taskService.getTasks(projectId);
+    setTasks(tasksResponse.data.tasks);
 
-      const activitiesResponse = await activityService.getActivities(projectId);
-      setActivities(activitiesResponse.data.activities);
-    } catch (error) {
-      toast.error('Failed to load project');
-      navigate('/dashboard');
-    } finally {
-      setLoading(false);
-    }
-  };
+    const activitiesResponse = await activityService.getActivities(projectId);
+    setActivities(activitiesResponse.data.activities);
+  } catch (error) {
+    toast.error('Failed to load project');
+    navigate('/dashboard');
+  } finally {
+    setLoading(false);
+  }
+}, [projectId, navigate]);
 
   const handleDragEnd = async (result) => {
     const { source, destination, draggableId } = result;
@@ -204,21 +205,21 @@ const Board = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-matte-blue-900 via-dark-blue-800 to-matte-blue-800">
       {/* Header */}
-      <header className="border-b border-matte-blue-600 bg-gradient-to-r from-matte-blue-800 to-dark-blue-800 shadow-2xl">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex justify-between items-center">
+      <header className="border-b shadow-2xl border-matte-blue-600 bg-gradient-to-r from-matte-blue-800 to-dark-blue-800">
+        <div className="flex items-center justify-between px-4 py-6 mx-auto max-w-7xl sm:px-6 lg:px-8">
           <div className="flex-1">
             <button
               onClick={() => navigate('/dashboard')}
-              className="text-accent-cyan hover:text-accent-blue mb-2 font-semibold transition"
+              className="mb-2 font-semibold transition text-accent-cyan hover:text-accent-blue"
             >
               ← Back to Dashboard
             </button>
             <h1 className="text-4xl font-bold text-white">{project.title}</h1>
-            <p className="text-matte-blue-300 mt-1">{project.description}</p>
+            <p className="mt-1 text-matte-blue-300">{project.description}</p>
           </div>
           <button
             onClick={() => setShowActivityTimeline(true)}
-            className="bg-gradient-to-r from-accent-purple to-accent-blue text-white px-6 py-2 rounded-lg hover:shadow-lg hover:shadow-accent-purple/50 transition"
+            className="px-6 py-2 text-white transition rounded-lg bg-gradient-to-r from-accent-purple to-accent-blue hover:shadow-lg hover:shadow-accent-purple/50"
           >
             Activity Timeline
           </button>
@@ -226,9 +227,9 @@ const Board = () => {
       </header>
 
       {/* Board */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="px-4 py-8 mx-auto max-w-7xl sm:px-6 lg:px-8">
         <DragDropContext onDragEnd={handleDragEnd}>
-          <div className="flex gap-6 overflow-x-auto pb-6">
+          <div className="flex gap-6 pb-6 overflow-x-auto">
             {project.columns && project.columns.length > 0 ? (
               project.columns.map((column) => (
                 <Droppable key={column._id} droppableId={column._id}>
@@ -242,7 +243,7 @@ const Board = () => {
                           : 'bg-gradient-to-br from-matte-blue-700 to-dark-blue-700 border border-matte-blue-600'
                       }`}
                     >
-                      <h2 className="text-lg font-bold text-white mb-4">{column.name}</h2>
+                      <h2 className="mb-4 text-lg font-bold text-white">{column.name}</h2>
 
                       <div className="space-y-3 min-h-96">
                         {groupedTasks[column._id] && groupedTasks[column._id].length > 0 ? (
@@ -269,7 +270,7 @@ const Board = () => {
                             </Draggable>
                           ))
                         ) : (
-                          <div className="text-center py-8 text-matte-blue-400">
+                          <div className="py-8 text-center text-matte-blue-400">
                             <p className="text-sm">No tasks yet</p>
                           </div>
                         )}
@@ -278,7 +279,7 @@ const Board = () => {
 
                       <button
                         onClick={() => handleCreateTask(column._id)}
-                        className="w-full mt-4 bg-matte-blue-600 hover:bg-matte-blue-500 text-white py-2 rounded-lg transition border-2 border-dashed border-matte-blue-500 hover:border-accent-cyan font-semibold"
+                        className="w-full py-2 mt-4 font-semibold text-white transition border-2 border-dashed rounded-lg bg-matte-blue-600 hover:bg-matte-blue-500 border-matte-blue-500 hover:border-accent-cyan"
                       >
                         + Add Task
                       </button>
