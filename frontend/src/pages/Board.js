@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
@@ -21,28 +21,27 @@ const Board = () => {
   const [selectedColumn, setSelectedColumn] = useState(null);
   const [showActivityTimeline, setShowActivityTimeline] = useState(false);
 
+async function fetchProjectData() {
+  try {
+    const projectResponse = await projectService.getProjectById(projectId);
+    setProject(projectResponse.data.project);
+
+    const tasksResponse = await taskService.getTasks(projectId);
+    setTasks(tasksResponse.data.tasks);
+
+    const activitiesResponse = await activityService.getActivities(projectId);
+    setActivities(activitiesResponse.data.activities);
+  } catch (error) {
+    toast.error("Failed to load project");
+    navigate("/dashboard");
+  } finally {
+    setLoading(false);
+  }
+}
+
 useEffect(() => {
-  const fetchProjectData = async () => {
-    try {
-      const projectResponse = await projectService.getProjectById(projectId);
-      setProject(projectResponse.data.project);
-
-      const tasksResponse = await taskService.getTasks(projectId);
-      setTasks(tasksResponse.data.tasks);
-
-      const activitiesResponse = await activityService.getActivities(projectId);
-      setActivities(activitiesResponse.data.activities);
-    } catch (error) {
-      toast.error("Failed to load project");
-      navigate("/dashboard");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   fetchProjectData();
 }, [projectId, navigate]);
-
 
   useEffect(() => {
     if (socket) {
