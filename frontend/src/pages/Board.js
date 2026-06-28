@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
@@ -21,7 +21,7 @@ const Board = () => {
   const [selectedColumn, setSelectedColumn] = useState(null);
   const [showActivityTimeline, setShowActivityTimeline] = useState(false);
 
-async function fetchProjectData() {
+const fetchProjectData = useCallback(async () => {
   try {
     const projectResponse = await projectService.getProjectById(projectId);
     setProject(projectResponse.data.project);
@@ -37,11 +37,11 @@ async function fetchProjectData() {
   } finally {
     setLoading(false);
   }
-}
+}, [projectId, navigate]);
 
 useEffect(() => {
   fetchProjectData();
-}, [projectId, navigate]);
+}, [fetchProjectData]);
 
   useEffect(() => {
     if (socket) {
