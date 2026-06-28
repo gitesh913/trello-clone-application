@@ -21,6 +21,24 @@ const Board = () => {
   const [selectedColumn, setSelectedColumn] = useState(null);
   const [showActivityTimeline, setShowActivityTimeline] = useState(false);
 
+  const fetchProjectData = useCallback(async () => {
+  try {
+    const projectResponse = await projectService.getProjectById(projectId);
+    setProject(projectResponse.data.project);
+
+    const tasksResponse = await taskService.getTasks(projectId);
+    setTasks(tasksResponse.data.tasks);
+
+    const activitiesResponse = await activityService.getActivities(projectId);
+    setActivities(activitiesResponse.data.activities);
+  } catch (error) {
+    toast.error('Failed to load project');
+    navigate('/dashboard');
+  } finally {
+    setLoading(false);
+  }
+}, [projectId, navigate])
+
   useEffect(() => {
   fetchProjectData();
 }, [fetchProjectData]);
@@ -69,23 +87,7 @@ const Board = () => {
     }
   }, [socket, projectId]);
 
- const fetchProjectData = useCallback(async () => {
-  try {
-    const projectResponse = await projectService.getProjectById(projectId);
-    setProject(projectResponse.data.project);
-
-    const tasksResponse = await taskService.getTasks(projectId);
-    setTasks(tasksResponse.data.tasks);
-
-    const activitiesResponse = await activityService.getActivities(projectId);
-    setActivities(activitiesResponse.data.activities);
-  } catch (error) {
-    toast.error('Failed to load project');
-    navigate('/dashboard');
-  } finally {
-    setLoading(false);
-  }
-}, [projectId, navigate]);
+ ;
 
   const handleDragEnd = async (result) => {
     const { source, destination, draggableId } = result;
